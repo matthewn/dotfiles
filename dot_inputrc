@@ -1,0 +1,18 @@
+# http://superuser.com/a/357394
+# ctrl-right:
+"\e[1;5D": backward-word
+# ctrl-left:
+"\e[1;5C": forward-word
+
+# http://www.ukuug.org/events/linux2003/papers/bash_tips/
+# up and down arrows do *incremental* history search
+"\e[A": history-search-backward
+"\e[B": history-search-forward
+
+# When listing possible file completions, 
+# put / after directory names and * after programs
+set visible-stats on
+set colored-stats on
+
+set show-all-if-ambiguous on
+set completion-ignore-case on
