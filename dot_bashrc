@@ -147,6 +147,52 @@ function up() {
   done
 }
 
+# automatic python venv activation/deactivation via poetry
+# https://cedaei.com/posts/python-poetry-pipx/#poetry-and-virtualenvs
+if command -v poetry 1>/dev/null 2>&1; then
+    function poet() {
+        POET_MANUAL=1
+        if [[ -v VIRTUAL_ENV ]]; then
+            deactivate
+        else
+            . "$(poetry env info --path)/bin/activate"
+        fi
+    }
+    function find_in_parent() {
+        local path
+        IFS="/" read -ra path <<<"$PWD"
+        for ((i=${#path[@]}; i > 0; i--)); do
+            local current_path=""
+            for ((j=1; j<i; j++)); do
+                current_path="$current_path/${path[j]}"
+            done
+            if [[ -e "${current_path}/$1" ]]; then
+                echo "${current_path}/"
+                return
+            fi
+        done
+        return 1
+    }
+    function auto_poet() {
+        ret="$?"
+        if [[ -v POET_MANUAL ]]; then
+            return $ret
+        fi
+        if find_in_parent pyproject.toml &> /dev/null; then
+            if [[ ! -v VIRTUAL_ENV ]]; then
+                if BASE="$(poetry env info --path)"; then
+                    . "$BASE/bin/activate"
+                else
+                    POET_MANUAL=1
+                fi
+            fi
+        elif [[ -v VIRTUAL_ENV ]]; then
+            deactivate
+        fi
+        return $ret
+    }
+    PROMPT_COMMAND="auto_poet;$PROMPT_COMMAND"
+fi
 
 #
 # INTEGRATIONS
@@ -171,4 +217,3 @@ fi
 if command -v "$HOME/.local/lib/django_bash_completion" 1>/dev/null 2>&1; then
     . "$HOME/.local/lib/django_bash_completion"
 fi
-
