@@ -15,7 +15,7 @@ if [ "$PS1" ]; then
   alias ll='ls -laF'
   alias lsd='ls -d */'
   alias m='manage.py'
-  alias mahna='ssh www.mahnamahna.net'
+  alias mahna='ssh old.mahnamahna.net'
   alias mv='mv -iv'
   alias more='less'
   alias npmls='npm list --depth=0 2>/dev/null'
