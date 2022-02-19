@@ -1,0 +1,22 @@
+{
+    "plugins": [
+        "stylelint-order"
+    ],
+    "extends": "stylelint-config-standard-scss",
+    "rules": {
+        "alpha-value-notation": false,
+        "at-rule-no-unknown": null,
+        "at-rule-empty-line-before": false,
+        "color-function-notation": false,
+        "declaration-empty-line-before": false,
+        "no-descending-specificity": false,
+        "number-leading-zero": "never",
+        "rule-empty-line-before": false,
+        "selector-class-pattern": false,
+        "selector-list-comma-newline-after": false,
+        "string-quotes": "single",
+        "order/properties-alphabetical-order": true,
+        "scss/double-slash-comment-empty-line-before": false,
+        "scss/dollar-variable-empty-line-before": false
+    }
+}
