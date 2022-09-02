@@ -1,8 +1,10 @@
 # running interactively, then:
 if [ "$PS1" ]; then
   alias a='sudo apt'
+  alias cl='rlwrap sbcl'
   alias cp='cp -iv'
-  alias df='pydf -h  | grep -v "/snap"'
+  # alias df='pydf -h  | grep -v "/snap"'
+  alias df='pydf -h'
   alias dns='nmcli dev show | grep DNS'
   alias err='tail -f /var/log/apache2/error.log'
   alias fixdirs='find . -type d -exec chmod 775 {} \;'
@@ -18,14 +20,12 @@ if [ "$PS1" ]; then
   alias more='less'
   alias npmls='npm list --depth=0 2>/dev/null'
   alias o='xdg-open'
-  alias pes='pipenv shell'
   alias posh='poetry shell'
   alias pc='ssh -X -p 2222 pc'
   alias ports='sudo vim /etc/apache2/ports.conf'
   alias rm='rm -iv'
   alias rs='manage.py runserver_plus --keep-meta-shutdown'
   alias samson='ssh -X samson'
-  alias scale1='xrandr --output eDP-1 --scale 1x1'
   alias sites='cd /etc/apache2/sites-available'
   alias sources="grep -r --include '*.list' '^deb ' /etc/apt/sources.list /etc/apt/sources.list.d/"
   alias topcmds="history | awk '{print \$2}' | sort | uniq -c | sort -rn | head -20"
