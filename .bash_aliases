@@ -20,6 +20,7 @@ if [ "$PS1" ]; then
   alias more='less'
   alias npmls='npm list --depth=0 2>/dev/null'
   alias o='xdg-open'
+  alias pgshell='sudo -u postgres psql'
   alias posh='poetry shell'
   alias pc='ssh -X -p 2222 pc'
   alias ports='sudo vim /etc/apache2/ports.conf'
