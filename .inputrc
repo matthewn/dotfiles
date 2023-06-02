@@ -1,7 +1,9 @@
+# save URL for reference:
+# https://bluz71.github.io/2023/06/02/maximize-productivity-of-the-bash-shell.html
+
+# ctrl-left and ctrl-right for word-to-word movement
 # http://superuser.com/a/357394
-# ctrl-right:
 "\e[1;5D": backward-word
-# ctrl-left:
 "\e[1;5C": forward-word
 
 # http://www.ukuug.org/events/linux2003/papers/bash_tips/
@@ -9,10 +11,35 @@
 "\e[A": history-search-backward
 "\e[B": history-search-forward
 
-# When listing possible file completions, 
-# put / after directory names and * after programs
+# completions: put / after directory names, * after programs
 set visible-stats on
+
+# automatically add slash to the end of symlinked directories when completing
+set mark-symlinked-directories on
+
+# enable completion coloring
+set colored-completion-prefix on
 set colored-stats on
 
-set show-all-if-ambiguous on
+# ignore case when completing
 set completion-ignore-case on
+
+# immediately display completion matches
+set show-all-if-ambiguous on
+
+# NEW FROM HERE 6/2023
+
+# tab cycles forward through and shift-tab cycles backward through completion
+# choices
+TAB: menu-complete
+"\e[Z": menu-complete-backward
+
+# display the common prefix choices on the first completion then cycle the
+# available choices on the next completion
+set menu-complete-display-prefix on
+
+# turn off the completions pager
+set page-completions off
+
+# smartly complete items when the cursor is not at the end of the line
+set skip-completed-text on
