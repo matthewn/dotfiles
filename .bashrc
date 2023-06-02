@@ -2,11 +2,17 @@
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
 
+# reference:
+# https://bluz71.github.io/2018/03/15/bash-shell-tweaks-tips.html
+
 # If not running interactively, don't do anything
 case $- in
     *i*) ;;
       *) return;;
 esac
+
+# trim huge dir strings
+PROMPT_DIRTRIM=4
 
 # don't put duplicate lines or lines starting with space in the history.
 # See bash(1) for more options
@@ -14,6 +20,9 @@ HISTCONTROL=ignoreboth
 
 # append to the history file, don't overwrite it
 shopt -s histappend
+
+# autocorrect mispelled dirs
+shopt -s cdspell dirspell
 
 # for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
 HISTSIZE=10000
@@ -105,13 +114,8 @@ export LESS_TERMCAP_so=$'\E[38;5;246m' # begin standout-mode - info box export L
 export LESS_TERMCAP_us=$'\E[04;38;5;146m' # begin underline
 
 # append history with every new command issued
-if command -v fasd 1>/dev/null 2>&1; then
-    # fasd-compatible variant
-    PROMPT_COMMAND="$PROMPT_COMMAND history -a"
-else
-    export PROMPT_COMMAND="$PROMPT_COMMAND; history -a;"
-    # export PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND ;} history -a;"
-fi
+# and share between concurrent sessions
+PROMPT_COMMAND="history -a; history -n"
 
 #
 # CUSTOM FUNCTIONS
