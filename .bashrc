@@ -166,6 +166,11 @@ if command -v direnv 1>/dev/null 2>&1; then
     eval "$(direnv hook bash)"
 fi
 
+# pipx completion
+if command -v pipx 1>/dev/null 2>&1; then
+    eval "$(register-python-argcomplete pipx)"
+fi
+
 # pyenv completion
 if command -v pyenv 1>/dev/null 2>&1; then
     eval "$(pyenv init -)"
