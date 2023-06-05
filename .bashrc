@@ -153,7 +153,10 @@ fi
 # fzf integration
 if command -v fzf 1>/dev/null 2>&1; then
     source /usr/share/doc/fzf/examples/key-bindings.bash
-    source /usr/share/doc/fzf/examples/completion.bash
+    # for ubuntu < 22.04
+    if [ -f /usr/share/doc/fzf/examples/completion.bash ]; then
+        source /usr/share/doc/fzf/examples/completion.bash
+    fi
 fi
 
 # thefuck integration (github.com/nvbn/thefuck)
