@@ -122,7 +122,10 @@ PROMPT_COMMAND="history -a; history -n"
 #
 
 svim () {
-  vimer $1 && xdotool search --name "GVIM" windowactivate --sync
+  # X11 version
+  # vimer $1 && xdotool search --name "GVIM" windowactivate --sync
+  # Wayland version
+  vimer $1 && raise "Gvim"
 }
 
 termtitle() {
