@@ -1,0 +1,28 @@
+/* highlight starred rows */
+tr[is='thread-row'][data-properties*='flagged'] {
+  background-color: var(--color-amber-20) !important;
+}
+tr[is='thread-row'][data-properties*='flagged'].selected {
+  background-color: var(--color-amber-40) !important;
+}
+
+/* bring back zebra striping */
+tr[is='thread-row']:nth-child(even) {
+  background-color: var(--color-ink-10);
+}
+
+/* loosen up the compact view a bit */
+li[is='folder-tree-row'],
+table[is='tree-view-table'] td:is(.button-column, .tree-view-row-select) {
+  padding: 2px 0;
+}
+
+/* make selected day stand out in month view */
+.calendar-month-day-box-current-month[selected='true'] {
+  background-color: var(--color-teal-60) !important;
+}
+
+/* make TODAY stand out in month view */
+.calendar-month-day-box-current-month[relation='today'] {
+  background-color: var(--color-orange-40) !important;
+}
