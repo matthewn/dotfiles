@@ -28,6 +28,9 @@ shopt -s cdspell dirspell
 HISTSIZE=10000
 HISTFILESIZE=10000
 
+# include local MANPATH (added for zoxide)
+MANPATH=$HOME/.local/share/man:$MANPATH
+
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.
 shopt -s checkwinsize
@@ -148,9 +151,9 @@ function up() {
 # INTEGRATIONS
 #
 
-# fasd integration
-if command -v fasd 1>/dev/null 2>&1; then
-    eval "$(fasd --init auto)"
+# zoxide integration
+if command -v zoxide 1>/dev/null 2>&1; then
+    eval "$(zoxide init bash)"
 fi
 
 # fzf integration
