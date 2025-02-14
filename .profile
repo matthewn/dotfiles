@@ -8,6 +8,11 @@
 # for ssh logins, install and configure the libpam-umask package.
 #umask 022
 
+# opensuse systems want this in the mix here (ubuntu/debian don't)
+if grep -q "openSUSE" /etc/os-release; then
+    test -z "$PROFILEREAD" && . /etc/profile || true
+fi
+
 # if running bash
 if [ -n "$BASH_VERSION" ]; then
     # include .bashrc if it exists
