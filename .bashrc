@@ -158,10 +158,17 @@ fi
 
 # fzf integration
 if command -v fzf 1>/dev/null 2>&1; then
-    source /usr/share/doc/fzf/examples/key-bindings.bash
+    # for ubuntu >= 22.04
+    if [ -f /usr/share/doc/fzf/examples/key-bindings.bash ]; then
+        source /usr/share/doc/fzf/examples/key-bindings.bash
+    fi
     # for ubuntu < 22.04
     if [ -f /usr/share/doc/fzf/examples/completion.bash ]; then
         source /usr/share/doc/fzf/examples/completion.bash
+    fi
+    # for opensuse
+    if [ -f /usr/share/fzf/shell/key-bindings.bash ]; then
+        source /usr/share/fzf/shell/key-bindings.bash
     fi
 fi
 
