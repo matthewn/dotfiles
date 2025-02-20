@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# requires the Window Calls GNOME extension
+# most functions require the Window Calls GNOME extension
 # https://github.com/ickyicky/window-calls
 
 winid () {
@@ -34,4 +34,13 @@ lswindows () {
         --method org.gnome.Shell.Extensions.Windows.List \
         | sed -E 's/^\('\''//; s/'\'',\)$//; s/^\("//; s/",\)$//; s/\\"/"/g' \
         | jq '.[] | .wm_class'
+}
+
+workspace_height () {
+    output=$(gdbus call --session \
+        --dest org.gnome.Mutter.DisplayConfig \
+        --object-path /org/gnome/Mutter/DisplayConfig \
+        --method org.gnome.Mutter.DisplayConfig.GetCurrentState)
+    height=$(echo "$output" | grep -oP "(?<=@60\.000', )[0-9]+, [0-9]+" | cut -d',' -f2)
+    echo "$height" | bc | cut -d'.' -f1
 }
