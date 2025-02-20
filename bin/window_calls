@@ -26,3 +26,12 @@ raise_window () {
         --object-path /org/gnome/Shell/Extensions/Windows \
         --method org.gnome.Shell.Extensions.Windows.Activate $1
 }
+
+lswindows () {
+    gdbus call --session \
+        --dest org.gnome.Shell \
+        --object-path /org/gnome/Shell/Extensions/Windows \
+        --method org.gnome.Shell.Extensions.Windows.List \
+        | sed -E 's/^\('\''//; s/'\'',\)$//; s/^\("//; s/",\)$//; s/\\"/"/g' \
+        | jq '.[] | .wm_class'
+}

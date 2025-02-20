@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [ $XDG_SESSION_TYPE=="wayland" ]; then
+
+    # WAYLAND
+    source $HOME/bin/window_calls
+    WINID=$(winid $1)
+    if [ "$WINID" != "" ]; then
+        raise_window $WINID > /dev/null
+    else
+        exit 1
+    fi
+
+else
+
+    # X11
+    wmctrl -xa $1
+
+fi
