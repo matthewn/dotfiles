@@ -3,11 +3,11 @@
 : ${XDG_CACHE_HOME:=$HOME/.cache}
 declare -A direnv_layout_dirs
 direnv_layout_dir() {
-	echo "${direnv_layout_dirs[$PWD]:=$(
-		local hash="$(sha1sum - <<<"${PWD}" | cut -c-7)"
-		local path="${PWD//[^a-zA-Z0-9]/-}"
-		echo "${XDG_CACHE_HOME}/direnv/layouts/${hash}${path}"
-	)}"
+    echo "${direnv_layout_dirs[$PWD]:=$(
+        local hash="$(sha1sum - <<<"${PWD}" | cut -c-7)"
+        local path="${PWD//[^a-zA-Z0-9]/-}"
+        echo "${XDG_CACHE_HOME}/direnv/layouts/${hash}${path}"
+    )}"
 }
 
 # provide a layout for poetry projects (pyproject.toml)
@@ -28,5 +28,26 @@ layout_poetry() {
 
     PATH_add "$VIRTUAL_ENV/bin"
     export POETRY_ACTIVE=1
+    export VIRTUAL_ENV
+}
+
+
+# provide a layout for uv projects that stores venvs in $HOME/.cache/uv-venvs/
+layout_uv() {
+    local project_name=$(basename "$(pwd)")
+    local project_hash=$(echo "$(pwd)" | shasum -a 256 | cut -c1-8)
+    local venv_path="$HOME/.cache/uv-venvs/${project_name}-${project_hash}"
+    export UV_PROJECT_ENVIRONMENT="$venv_path"
+
+    if [[ ! -d "$venv_path" ]]; then
+        log_status "No virtual environment exists at $venv_path. Executing \`uv venv\` to create one..."
+        uv venv "$venv_path"
+        log_status "Running uv sync..."
+        uv sync
+    fi
+
+    VIRTUAL_ENV="$venv_path"
+    PATH_add "$VIRTUAL_ENV/bin"
+    export UV_ACTIVE=1
     export VIRTUAL_ENV
 }
