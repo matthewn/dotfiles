@@ -197,6 +197,14 @@ if command -v "$HOME/.local/lib/django_bash_completion" 1>/dev/null 2>&1; then
     . "$HOME/.local/lib/django_bash_completion"
 fi
 
+# uv / uvx completion
+if command -v uv 1>/dev/null 2>&1; then
+    eval "$(uv generate-shell-completion bash)"
+fi
+if command -v uvx 1>/dev/null 2>&1; then
+    eval "$(uvx --generate-shell-completion bash)"
+fi
+
 # Alias definitions.
 # You may want to put all your additions into a separate file like
 # ~/.bash_aliases, instead of adding them here directly.
