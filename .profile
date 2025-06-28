@@ -21,7 +21,7 @@ if [ -n "$BASH_VERSION" ]; then
     fi
 fi
 
-# set PATH so it includes user's private bin if it exists
+# set PATH so it includes user's private bin if it exists (20th century style!)
 if [ -d "$HOME/bin" ] ; then
     PATH="$HOME/bin:$PATH"
 fi
@@ -30,6 +30,9 @@ fi
 if [ -d "$HOME/.local/bin" ] ; then
     PATH="$HOME/.local/bin:$PATH"
 fi
+
+# mn direnv
+export DIRENV_WARN_TIMEOUT=30s
 
 # mn pyenv
 export PYENV_ROOT="$HOME/.pyenv"
