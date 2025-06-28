@@ -36,14 +36,14 @@ layout_poetry() {
 layout_uv() {
     local project_name=$(basename "$(pwd)")
     local project_hash=$(echo "$(pwd)" | shasum -a 256 | cut -c1-8)
-    local venv_path="$HOME/.cache/uv-venvs/${project_name}-${project_hash}"
+    local venv_path="${XDG_CACHE_HOME}/uv-venvs/${project_name}-${project_hash}"
     export UV_PROJECT_ENVIRONMENT="$venv_path"
 
     if [[ ! -d "$venv_path" ]]; then
         log_status "No virtual environment exists at $venv_path. Executing \`uv venv\` to create one..."
         uv venv "$venv_path"
         log_status "Running uv sync..."
-        uv sync
+        uv sync --no-progress
     fi
 
     VIRTUAL_ENV="$venv_path"
