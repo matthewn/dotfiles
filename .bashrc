@@ -124,19 +124,23 @@ PROMPT_COMMAND="history -a; history -n"
 # CUSTOM FUNCTIONS
 #
 
+# 'a' gets you the package manager on ubuntu or tumbleweed
+a() {
+    if [ -f /etc/os-release ] && grep -q "ubuntu\|debian" /etc/os-release; then
+        sudo apt "$@"
+    elif [ -f /etc/os-release ] && grep -q "opensuse\|suse" /etc/os-release; then
+        sudo zypper "$@"
+    else
+        echo "Unsupported distribution" >&2
+        return 1
+    fi
+}
+
 svim () {
   # X11 version
   # vimer $1 && xdotool search --name "GVIM" windowactivate --sync
   # Wayland version
   vimer $1 && raise "Gvim"
-}
-
-termtitle() {
-  if [[ -z "$ORIG" ]]; then
-    ORIG=$PS1
-  fi
-  TITLE="\[\e]2;$*\a\]"
-  PS1=${ORIG}${TITLE}
 }
 
 # http://tuxdiary.com/2015/02/05/navigate-up-without-cd/
@@ -172,19 +176,9 @@ if command -v fzf 1>/dev/null 2>&1; then
     fi
 fi
 
-# thefuck integration (github.com/nvbn/thefuck)
-if command -v thefuck 1>/dev/null 2>&1; then
-    eval $(thefuck --alias)
-fi
-
 # direnv integration
 if command -v direnv 1>/dev/null 2>&1; then
     eval "$(direnv hook bash)"
-fi
-
-# pipx completion
-if command -v pipx 1>/dev/null 2>&1; then
-    eval "$(register-python-argcomplete pipx)"
 fi
 
 # pyenv completion
