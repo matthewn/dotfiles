@@ -46,8 +46,8 @@ if [ -f "/usr/bin/ruby" ] ; then
 fi
 
 # mn rust crates
-if [ -f "/usr/bin/cargo" ] ; then
-    export PATH="$PATH:$HOME/.cargo/bin"
+if [ -f ~/.cargo/env ]; then
+    . ~/.cargo/env
 fi
 
 # mn npm
