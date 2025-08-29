@@ -23,16 +23,18 @@ fi
 
 # set PATH so it includes user's private bin if it exists (20th century style!)
 if [ -d "$HOME/bin" ] ; then
-    PATH="$HOME/bin:$PATH"
+    export PATH="$HOME/bin:$PATH"
 fi
 
 # set PATH so it includes user's private bin if it exists
 if [ -d "$HOME/.local/bin" ] ; then
-    PATH="$HOME/.local/bin:$PATH"
+    export PATH="$HOME/.local/bin:$PATH"
 fi
 
-# mn direnv
-export DIRENV_WARN_TIMEOUT=30s
+# mn npm packages
+if [ -d "$HOME/.npm-packages" ]; then
+    export PATH="$HOME/.npm-packages/bin:$PATH"
+fi
 
 # mn pyenv
 export PYENV_ROOT="$HOME/.pyenv"
@@ -50,9 +52,9 @@ if [ -f ~/.cargo/env ]; then
     . ~/.cargo/env
 fi
 
-# mn npm
-NPM_PACKAGES="${HOME}/.npm-packages"
-export PATH="$PATH:$NPM_PACKAGES/bin"
+# mn direnv
+export DIRENV_WARN_TIMEOUT=30s
+
 # Preserve MANPATH if you already defined it somewhere in your config.
 # Otherwise, fall back to `manpath` so we can inherit from `/etc/manpath`.
 export MANPATH="${MANPATH-$(manpath)}:$NPM_PACKAGES/share/man"
