@@ -8,7 +8,7 @@ winid () {
         --dest org.gnome.Shell \
         --object-path /org/gnome/Shell/Extensions/Windows \
         --method org.gnome.Shell.Extensions.Windows.List \
-        | sed -E 's/^\('\''//; s/'\'',\)$//; s/^\("//; s/",\)$//; s/\\"/"/g' \
+        | sed -E 's/^\('\''//; s/'\'',\)$//; s/^\("//; s/",\)$//; s/\\\\"/\\"/g; s/\\"/"/g' \
         | jq -r ".[] | select(.wm_class==\"$1\") | .id"
 }
 
