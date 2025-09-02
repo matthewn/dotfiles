@@ -143,6 +143,25 @@ svim () {
   vimer $1 && raise "Gvim"
 }
 
+nv() {
+    local sock=/tmp/nvim-$USER
+    # clean up dead socket if needed
+    if [ -S "$sock" ] && ! nvim --server "$sock" --remote-expr 1 >/dev/null 2>&1; then
+        rm -f "$sock"
+    fi
+    if [ -S "$sock" ]; then
+        if [ $# -eq 0 ]; then
+            raise neovide
+        else
+            eval "set -- $*"
+            nvim --server "$sock" --remote "$@"
+            raise neovide
+        fi
+    else
+        neovide -- --listen "$sock" "$@" &
+    fi
+}
+
 # http://tuxdiary.com/2015/02/05/navigate-up-without-cd/
 function up() {
   for ((i=1; i<=${1:-1}; i++));
