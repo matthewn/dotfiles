@@ -8,8 +8,8 @@ winid () {
         --dest org.gnome.Shell \
         --object-path /org/gnome/Shell/Extensions/Windows \
         --method org.gnome.Shell.Extensions.Windows.List \
-        | sed -E 's/^\('\''//; s/'\'',\)$//; s/^\("//; s/",\)$//; s/\\\\"/\\"/g; s/\\"/"/g' \
-        | jq -r ".[] | select(.wm_class==\"$1\") | .id"
+        | python3 -c "import sys, ast, json; print(ast.literal_eval(sys.stdin.read())[0])" \
+        | jq -r --arg target "$1" '.[] | select(.wm_class == $target) | .id'
 }
 
 move_resize_window () {
