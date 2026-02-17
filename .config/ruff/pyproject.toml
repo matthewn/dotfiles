@@ -1,0 +1,8 @@
+[tool.ruff]
+lint.select = ['E', 'F', 'W']
+lint.ignore = [
+    'F403', # 'from module import *' used; unable to detect undefined names
+    'E501', # Line too long
+]
+# enable preview mode to get access to E302 and E303 (blank lines)
+lint.preview = true
