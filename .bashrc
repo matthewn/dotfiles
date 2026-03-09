@@ -11,6 +11,26 @@ case $- in
       *) return;;
 esac
 
+if grep -q "Fedora" /etc/os-release; then
+    # fedora systems want these in the mix here (ubuntu/tumbleweed don't)
+    # source global definitions
+    if [ -f /etc/bashrc ]; then
+        . /etc/bashrc
+    fi
+    # user specific aliases and functions
+    if [ -d ~/.bashrc.d ]; then
+        for rc in ~/.bashrc.d/*; do
+            if [ -f "$rc" ]; then
+                . "$rc"
+            fi
+        done
+    fi
+    unset rc
+
+    # fedora also needs this (built-in on ubuntu/tumbleweed)
+    source /usr/share/git-core/contrib/completion/git-prompt.sh
+fi
+
 # trim huge dir strings
 PROMPT_DIRTRIM=4
 
@@ -69,9 +89,9 @@ if [ -n "$force_color_prompt" ]; then
 fi
 
 if [ "$color_prompt" = yes ]; then
-  PS1='${debian_chroot:+($debian_chroot)}\[\e[1;34m\]\u@\h\[\e[m\]:\[\e[1;33m\]\w$(__git_ps1 "\[\e[m\]:\[\e[1;36m\]%s")\[\e[m\]\$ '
+ PS1='${debian_chroot:+($debian_chroot)}\[\e[1;34m\]\u@\h\[\e[m\]:\[\e[1;33m\]\w$(__git_ps1 "\[\e[m\]:\[\e[1;36m\]%s")\[\e[m\]\$ '
 else
-    PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+   PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
 fi
 unset color_prompt force_color_prompt
 
