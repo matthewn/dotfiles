@@ -31,6 +31,10 @@ if grep -q "Fedora" /etc/os-release; then
     source /usr/share/git-core/contrib/completion/git-prompt.sh
 fi
 
+if [ -f "$HOME/.bashrc_local" ]; then
+    . "$HOME/.bashrc_local"
+fi
+
 # trim huge dir strings
 PROMPT_DIRTRIM=4
 
