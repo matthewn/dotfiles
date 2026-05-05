@@ -105,6 +105,36 @@ lswindows () {
     } | column -t -s $'\t'
 }
 
+# arrange_dump
+#   Print move_resize_window calls that would restore each current window
+#   to its current position and size. Uses winid_from_class when the
+#   window's class is unique among open windows; for windows that share a
+#   class with another, falls back to winid_from_title with the window's
+#   exact title (anchored, regex-escaped).
+arrange_dump () {
+    dbus-send --session --print-reply=literal \
+        --dest=org.gnome.Shell \
+        /org/gnome/Shell/Extensions/Windows \
+        org.gnome.Shell.Extensions.Windows.List \
+        | jq -r 'group_by(.wm_class)[] | length as $count | .[] | [.id, .title, .wm_class, $count] | @tsv' \
+        | while IFS=$'\t' read -r id title class count; do
+            rect=$(dbus-send --session --print-reply=literal \
+                --dest=org.gnome.Shell \
+                /org/gnome/Shell/Extensions/Windows \
+                org.gnome.Shell.Extensions.Windows.GetFrameRect "uint32:$id" 2>/dev/null)
+            [ -z "$rect" ] && continue
+            read -r x y w h < <(echo "$rect" | jq -r '[.x, .y, .width, .height] | @tsv')
+            if [ "$count" = "1" ]; then
+                printf "move_resize_window \$(winid_from_class '%s') %s %s %s %s\n" \
+                    "$class" "$x" "$y" "$w" "$h"
+            else
+                escaped=$(printf '%s' "$title" | sed -E 's/[].\\^$*+?()|{}[]/\\&/g')
+                printf "move_resize_window \$(winid_from_title '^%s\$') %s %s %s %s\n" \
+                    "$escaped" "$x" "$y" "$w" "$h"
+            fi
+        done
+}
+
 # workspace_height
 #   Print the current display's vertical resolution in pixels (from Mutter).
 workspace_height () {
