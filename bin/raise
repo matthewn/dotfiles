@@ -1,19 +1,36 @@
 #!/bin/bash
+#
+# raise [--title] QUERY
+#   Raise the first window matching QUERY. By default QUERY is matched
+#   against wm_class (exact). With --title, QUERY is matched against the
+#   window title (regex on Wayland; substring on X11 via wmctrl -a).
 
-if [ $XDG_SESSION_TYPE=="wayland" ]; then
+mode=class
+if [ "$1" = "--title" ]; then
+    mode=title
+    shift
+fi
+query=$1
+
+if [ "$XDG_SESSION_TYPE" = "wayland" ]; then
 
     # WAYLAND
-    source $HOME/bin/window_calls
-    WINID=$(winid $1)
-    if [ "$WINID" != "" ]; then
-        raise_window $WINID > /dev/null
-    else
+    source "$(dirname "$0")/window_calls"
+    case "$mode" in
+        class) WINID=$(winid_from_class "$query") ;;
+        title) WINID=$(winid_from_title "$query") ;;
+    esac
+    if [[ "$WINID" == MISSING:* ]]; then
         exit 1
     fi
+    raise_window "$WINID" > /dev/null
 
 else
 
     # X11
-    wmctrl -xa $1
+    case "$mode" in
+        class) wmctrl -xa "$query" ;;
+        title) wmctrl -a  "$query" ;;
+    esac
 
 fi
