@@ -23,7 +23,7 @@ if [ "$XDG_SESSION_TYPE" = "wayland" ]; then
     if [[ "$WINID" == MISSING:* ]]; then
         exit 1
     fi
-    raise_window "$WINID" > /dev/null
+    raise_window "$WINID"
 
 else
 

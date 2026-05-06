@@ -2,32 +2,32 @@
 #
 # most functions require the Window Calls GNOME extension
 # https://github.com/ickyicky/window-calls
-#
-# We use two dbus tools, picked per call:
-#   - dbus-send --print-reply=literal: for JSON-returning reads (List,
-#     GetFrameRect). Outputs raw JSON ready for jq, no unwrapping needed.
-#   - gdbus call: for everything else (MoveResize, Activate, GetCurrentState).
-#     gdbus infers argument types from introspection, so we pass plain
-#     positional args; dbus-send would need a typed prefix on each one
-#     (uint32:.., int32:..), which is noisy for the 5-arg MoveResize.
+
+# _winext METHOD [ARGS...]
+#   Call a method on org.gnome.Shell.Extensions.Windows and print the
+#   reply. Args (typed prefixes like uint32:N) are passed verbatim.
+_winext () {
+    local method=$1; shift
+    dbus-send --session --print-reply=literal \
+        --dest=org.gnome.Shell \
+        /org/gnome/Shell/Extensions/Windows \
+        "org.gnome.Shell.Extensions.Windows.$method" "$@"
+}
+
+# _get_rect ID
+#   Print "X Y W H" tab-separated for window ID, or nothing on failure.
+_get_rect () {
+    _winext GetFrameRect "uint32:$1" 2>/dev/null \
+        | jq -r '[.x, .y, .width, .height] | @tsv'
+}
 
 # winid_from_class WM_CLASS
 #   Print the id of the first window whose wm_class equals WM_CLASS.
 #   On no match, prints the sentinel "MISSING:class:WM_CLASS" so callers
 #   can report what was searched for.
 winid_from_class () {
-    local id
-    id=$(dbus-send --session --print-reply=literal \
-        --dest=org.gnome.Shell \
-        /org/gnome/Shell/Extensions/Windows \
-        org.gnome.Shell.Extensions.Windows.List \
-        | jq -r --arg target "$1" '.[] | select(.wm_class == $target) | .id' \
-        | head -n1)
-    if [ -z "$id" ]; then
-        echo "MISSING:class:$1"
-    else
-        echo "$id"
-    fi
+    local id=$(_winext List | jq -r --arg t "$1" '.[] | select(.wm_class == $t) | .id' | head -n1)
+    echo "${id:-MISSING:class:$1}"
 }
 
 # winid_from_title TITLE_REGEX
@@ -35,18 +35,8 @@ winid_from_class () {
 #   (jq regex via test()). On no match, prints the sentinel
 #   "MISSING:title:TITLE_REGEX" so callers can report what was searched for.
 winid_from_title () {
-    local id
-    id=$(dbus-send --session --print-reply=literal \
-        --dest=org.gnome.Shell \
-        /org/gnome/Shell/Extensions/Windows \
-        org.gnome.Shell.Extensions.Windows.List \
-        | jq -r --arg re "$1" '.[] | select(.title | test($re)) | .id' \
-        | head -n1)
-    if [ -z "$id" ]; then
-        echo "MISSING:title:$1"
-    else
-        echo "$id"
-    fi
+    local id=$(_winext List | jq -r --arg t "$1" '.[] | select(.title | test($t)) | .id' | head -n1)
+    echo "${id:-MISSING:title:$1}"
 }
 
 # move_resize_window ID X Y WIDTH HEIGHT
@@ -54,28 +44,21 @@ winid_from_title () {
 #   are unsigned. If ID is a "MISSING:..." sentinel from winid_from_class /
 #   winid_from_title, skips with a warning naming what was searched for.
 move_resize_window () {
-    if [ "$#" -ne 5 ]; then
+    if [[ $# -ne 5 ]]; then
         echo "move_resize_window: expected 5 args (id x y w h), got $#; skipping" >&2
         return 0
     fi
-    if [[ "$1" == MISSING:* ]]; then
+    if [[ $1 == MISSING:* ]]; then
         echo "move_resize_window: no window matching ${1#MISSING:}; skipping" >&2
         return 0
     fi
-    gdbus call --session \
-        --dest org.gnome.Shell \
-        --object-path /org/gnome/Shell/Extensions/Windows \
-        --method org.gnome.Shell.Extensions.Windows.MoveResize "$1" "$2" "$3" "$4" "$5" \
-        > /dev/null
+    _winext MoveResize "uint32:$1" "int32:$2" "int32:$3" "uint32:$4" "uint32:$5" >/dev/null
 }
 
 # raise_window ID
 #   Activate (focus and raise) window ID.
 raise_window () {
-    gdbus call --session \
-        --dest org.gnome.Shell \
-        --object-path /org/gnome/Shell/Extensions/Windows \
-        --method org.gnome.Shell.Extensions.Windows.Activate "$1"
+    _winext Activate "uint32:$1" >/dev/null
 }
 
 # lswindows
@@ -85,21 +68,11 @@ raise_window () {
 lswindows () {
     {
         printf 'ID\tTITLE\tCLASS\tX\tY\tW\tH\n'
-        dbus-send --session --print-reply=literal \
-            --dest=org.gnome.Shell \
-            /org/gnome/Shell/Extensions/Windows \
-            org.gnome.Shell.Extensions.Windows.List \
+        _winext List \
             | jq -r '.[] | [.id, .title, .wm_class] | @tsv' \
             | while IFS=$'\t' read -r id title class; do
-                rect=$(dbus-send --session --print-reply=literal \
-                    --dest=org.gnome.Shell \
-                    /org/gnome/Shell/Extensions/Windows \
-                    org.gnome.Shell.Extensions.Windows.GetFrameRect "uint32:$id" 2>/dev/null)
-                if [ -n "$rect" ]; then
-                    read -r x y w h < <(echo "$rect" | jq -r '[.x, .y, .width, .height] | @tsv')
-                else
-                    x='?' y='?' w='?' h='?'
-                fi
+                read -r x y w h < <(_get_rect "$id")
+                [ -z "$x" ] && x='?' y='?' w='?' h='?'
                 printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$id" "$title" "$class" "$x" "$y" "$w" "$h"
             done
     } | column -t -s $'\t'
@@ -110,37 +83,44 @@ lswindows () {
 #   to its current position and size. Uses winid_from_class when the
 #   window's class is unique among open windows; for windows that share a
 #   class with another, falls back to winid_from_title with the window's
-#   exact title (anchored, regex-escaped).
+#   exact title (anchored, regex-escaped). When two windows share both
+#   class and title, the call is replaced with a "# AMBIGUOUS" comment
+#   and a warning is emitted to stderr.
 arrange_dump () {
-    dbus-send --session --print-reply=literal \
-        --dest=org.gnome.Shell \
-        /org/gnome/Shell/Extensions/Windows \
-        org.gnome.Shell.Extensions.Windows.List \
-        | jq -r 'group_by(.wm_class)[] | length as $count | .[] | [.id, .title, .wm_class, $count] | @tsv' \
-        | while IFS=$'\t' read -r id title class count; do
-            rect=$(dbus-send --session --print-reply=literal \
-                --dest=org.gnome.Shell \
-                /org/gnome/Shell/Extensions/Windows \
-                org.gnome.Shell.Extensions.Windows.GetFrameRect "uint32:$id" 2>/dev/null)
-            [ -z "$rect" ] && continue
-            read -r x y w h < <(echo "$rect" | jq -r '[.x, .y, .width, .height] | @tsv')
-            if [ "$count" = "1" ]; then
-                printf "move_resize_window \$(winid_from_class '%s') %s %s %s %s\n" \
-                    "$class" "$x" "$y" "$w" "$h"
+    _winext List \
+        | jq -r '
+            group_by(.wm_class)[]
+            | length as $class_count
+            | (group_by(.title) | .[])
+            | length as $title_count
+            | .[] | [.id, .title, .wm_class, $class_count, $title_count] | @tsv
+        ' \
+        | while IFS=$'\t' read -r id title class class_count title_count; do
+            read -r x y w h < <(_get_rect "$id")
+            [ -z "$x" ] && continue
+            if [ "$class_count" = "1" ]; then
+                printf "move_resize_window \$(winid_from_class '%s') %s %s %s %s\n" "$class" "$x" "$y" "$w" "$h"
+            elif [ "$title_count" = "1" ]; then
+                local escaped=$(printf '%s' "$title" | sed -E 's/[].\\^$*+?()|{}[]/\\&/g')
+                printf "move_resize_window \$(winid_from_title '^%s\$') %s %s %s %s\n" "$escaped" "$x" "$y" "$w" "$h"
             else
-                escaped=$(printf '%s' "$title" | sed -E 's/[].\\^$*+?()|{}[]/\\&/g')
-                printf "move_resize_window \$(winid_from_title '^%s\$') %s %s %s %s\n" \
-                    "$escaped" "$x" "$y" "$w" "$h"
+                echo "arrange_dump: ambiguous: $title_count windows with class='$class' title='$title'; skipping" >&2
+                printf "# AMBIGUOUS (%s windows): class='%s' title='%s' at %s,%s %sx%s\n" "$title_count" "$class" "$title" "$x" "$y" "$w" "$h"
             fi
         done
 }
 
-# workspace_height
-#   Print the current display's vertical resolution in pixels (from Mutter).
-workspace_height () {
-    gdbus call --session \
-        --dest org.gnome.Mutter.DisplayConfig \
-        --object-path /org/gnome/Mutter/DisplayConfig \
-        --method org.gnome.Mutter.DisplayConfig.GetCurrentState \
-        | grep -oP --color=never "@60\.000', [0-9]+, \K[0-9]+"
+# display_height
+#   Print the active display mode's vertical pixel resolution, as reported
+#   by Mutter (logical pixels — what window-positioning calls live in).
+#   Walks the first monitor's modes up to the one marked is-current=true
+#   and returns its height.
+display_height () {
+    dbus-send --session --print-reply=literal \
+        --dest=org.gnome.Mutter.DisplayConfig \
+        /org/gnome/Mutter/DisplayConfig \
+        org.gnome.Mutter.DisplayConfig.GetCurrentState \
+        | grep -m1 -B 99999 'is-current.*true' \
+        | grep -oP --color=never '\d+x\K\d+(?=@)' \
+        | tail -n1
 }
