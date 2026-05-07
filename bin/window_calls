@@ -78,15 +78,18 @@ lswindows () {
     } | column -t -s $'\t'
 }
 
-# arrange_dump
-#   Print move_resize_window calls that would restore each current window
-#   to its current position and size. Uses winid_from_class when the
-#   window's class is unique among open windows; for windows that share a
-#   class with another, falls back to winid_from_title with the window's
-#   exact title (anchored, regex-escaped). When two windows share both
-#   class and title, the call is replaced with a "# AMBIGUOUS" comment
-#   and a warning is emitted to stderr.
-arrange_dump () {
+# makescript
+#   Print a runnable script (to stdout) that restores each current window
+#   to its current position and size. Starts with a shebang and a `source`
+#   line for window_calls so the output can be redirected to a file and
+#   executed directly. Uses winid_from_class when the window's class is
+#   unique; for windows that share a class, falls back to winid_from_title
+#   with the window's exact title (anchored, regex-escaped). When two
+#   windows share both class and title, the call is replaced with an
+#   inline "# AMBIGUOUS" comment.
+makescript () {
+    printf '#!/bin/bash\n'
+    printf 'source %q\n\n' "$(realpath "${BASH_SOURCE[0]}")"
     _winext List \
         | jq -r '
             group_by(.wm_class)[]
@@ -104,7 +107,6 @@ arrange_dump () {
                 local escaped=$(printf '%s' "$title" | sed -E 's/[].\\^$*+?()|{}[]/\\&/g')
                 printf "move_resize_window \$(winid_from_title '^%s\$') %s %s %s %s\n" "$escaped" "$x" "$y" "$w" "$h"
             else
-                echo "arrange_dump: ambiguous: $title_count windows with class='$class' title='$title'; skipping" >&2
                 printf "# AMBIGUOUS (%s windows): class='%s' title='%s' at %s,%s %sx%s\n" "$title_count" "$class" "$title" "$x" "$y" "$w" "$h"
             fi
         done
